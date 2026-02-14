@@ -1,0 +1,319 @@
+<!doctype html>
+<html>
+
+<head></head>
+
+<body>
+	<!DOCTYPE html>
+	<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>AI Facial Identity Matching System</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+		<style>
+			.face-guide {
+				transition: all 0.5s ease;
+				stroke-dasharray: 10;
+			}
+
+			.active-guide {
+				stroke: #10b981 !important;
+				/* Tailwind green-500 */
+				stroke-width: 8;
+				stroke-dasharray: 0;
+				filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.6));
+			}
+
+			video {
+				transform: scaleX(-1);
+			}
+
+			.gov-header {
+				background: linear-gradient(90deg, #003366 0%, #004080 100%);
+			}
+		</style>
+	</head>
+
+	<body class="bg-slate-50 min-h-screen pb-12">
+
+		<header class="gov-header text-white py-4 px-6 shadow-lg mb-8">
+			<div class="max-w-6xl mx-auto flex justify-between items-center">
+				<div class="flex items-center space-x-4">
+					<div class="bg-white p-2 rounded-full">
+						<i class="fas fa-shield-check text-blue-900 text-2xl"></i>
+					</div>
+					<div>
+						<h1 class="text-xl font-bold tracking-tight uppercase">AI Facial Identity Matching System</h1>
+						<p class="text-xs text-blue-200">Made using face-api.js</p>
+					</div>
+				</div>
+				<div id="loadingStatus" class="bg-blue-800 px-4 py-2 rounded text-sm font-medium animate-pulse">
+					<i class="fas fa-cog fa-spin mr-2"></i> Initializing AI Models...
+				</div>
+			</div>
+		</header>
+
+		<main class="max-w-6xl mx-auto px-4">
+			<div class="flex items-center justify-center mb-10 space-x-4">
+				<div id="step1-pill"
+					class="flex items-center space-x-2 px-4 py-2 rounded-full bg-blue-600 text-white shadow-md transition-all">
+					<span class="font-bold border-2 border-white rounded-full w-6 h-6 flex items-center justify-center text-xs">1</span>
+					<span class="text-sm font-semibold uppercase">Upload Reference</span>
+				</div>
+				<div class="h-1 w-12 bg-gray-300 rounded"></div>
+				<div id="step2-pill"
+					class="flex items-center space-x-2 px-4 py-2 rounded-full bg-gray-200 text-gray-500 transition-all">
+					<span class="font-bold border-2 border-gray-400 rounded-full w-6 h-6 flex items-center justify-center text-xs">2</span>
+					<span class="text-sm font-semibold uppercase">Face Alignment</span>
+				</div>
+				<div class="h-1 w-12 bg-gray-300 rounded"></div>
+				<div id="step3-pill"
+					class="flex items-center space-x-2 px-4 py-2 rounded-full bg-gray-200 text-gray-500 transition-all">
+					<span class="font-bold border-2 border-gray-400 rounded-full w-6 h-6 flex items-center justify-center text-xs">3</span>
+					<span class="text-sm font-semibold uppercase">Verification</span>
+				</div>
+			</div>
+
+			<div class="grid lg:grid-cols-2 gap-8">
+
+				<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+					<div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
+						<h3 class="font-bold text-gray-700 flex items-center">
+							<i class="fas fa-id-card-alt mr-2 text-blue-600"></i> Identity Document Photo
+						</h3>
+					</div>
+					<div class="p-6">
+						<div class="mb-4">
+							<label class="block text-sm font-medium text-gray-600 mb-2">Select Photo to Upload</label>
+							<input type="file" id="img1Input" accept="image/*" disabled
+                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50">
+                    </div>
+
+							<div
+								class="relative aspect-video bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+								<img id="img1" class="hidden absolute inset-0 w-full h-full object-cover">
+								<div id="img1Placeholder" class="text-center text-gray-400 p-4">
+									<i class="fas fa-cloud-upload-alt text-4xl mb-2"></i>
+									<p class="text-sm">Awaiting document upload...</p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+						<div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
+							<h3 class="font-bold text-gray-700 flex items-center">
+								<i class="fas fa-video mr-2 text-red-600"></i> Live Biometric Capture
+							</h3>
+						</div>
+						<div class="p-6">
+							<div
+								class="relative aspect-video bg-black rounded-lg overflow-hidden border-4 border-gray-800 shadow-inner">
+								<video id="video" autoplay muted playsinline class="w-full h-full object-cover"></video>
+
+								<div class="absolute inset-0 flex items-center justify-center">
+									<svg id="guideSvg" class="face-guide w-[70%] h-[80%] stroke-white/40 fill-none"
+										viewBox="0 0 100 100">
+										<path stroke-width="2"
+											d="M50,10 C30,10 15,25 15,50 C15,75 30,90 50,90 C70,90 85,75 85,50 C85,25 70,10 50,10 Z" />
+									</svg>
+								</div>
+
+								<div id="countdown"
+									class="absolute inset-0 flex items-center justify-center text-8xl font-black text-green-400 hidden drop-shadow-lg">
+									3
+								</div>
+							</div>
+
+							<div id="instruction"
+								class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-700 text-sm font-medium">
+								Please upload your reference photo to begin.
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div id="result"
+					class="mt-8 p-8 rounded-xl bg-white border border-gray-200 shadow-sm text-center transition-all duration-500 border-t-4 border-t-gray-400">
+					<p class="text-gray-500 uppercase tracking-widest text-sm font-bold mb-1">Verification Status</p>
+					<h2 id="resultText" class="text-2xl font-black text-gray-700 italic">SYSTEM IDLE</h2>
+				</div>
+
+
+		</main>
+
+		<footer class="bg-white p-8 border-t border-slate-200">
+			<div class="max-w-7xl mx-auto text-center">
+				<p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.5em]">© 2026 EKR | AI Facial
+					Identity Matching System</p>
+			</div>
+		</footer>
+
+	<script>
+    (function() {
+      "use strict";
+
+			let descriptor1 = null;
+        let isCapturing = false;
+        const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+
+        async function startSystem() {
+            try {
+                await Promise.all([
+                    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+                ]);
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('video').srcObject = stream;
+                
+                const status = document.getElementById('loadingStatus');
+                status.innerHTML = `<i class="fas fa-check-circle mr-2"></i> AI ENGINE ONLINE`;
+                status.className = "bg-green-600 px-4 py-2 rounded text-sm font-medium text-white shadow-sm";
+                
+                document.getElementById('img1Input').disabled = false;
+                startDetectionLoop();
+            } catch (e) {
+                document.getElementById('loadingStatus').innerHTML = "L Hardware Error";
+            }
+        }
+
+        function updateStep(step) {
+            const steps = [1, 2, 3];
+            steps.forEach(s => {
+                const pill = document.getElementById(`step${s}-pill`);
+                if (s === step) {
+                    pill.className = "flex items-center space-x-2 px-4 py-2 rounded-full bg-blue-600 text-white shadow-md scale-105";
+                } else if (s < step) {
+                    pill.className = "flex items-center space-x-2 px-4 py-2 rounded-full bg-green-500 text-white opacity-80";
+                } else {
+                    pill.className = "flex items-center space-x-2 px-4 py-2 rounded-full bg-gray-200 text-gray-500";
+                }
+            });
+        }
+
+        function startDetectionLoop() {
+            const video = document.getElementById('video');
+            const guide = document.getElementById('guideSvg');
+            
+            setInterval(async () => {
+                if (isCapturing || !descriptor1) return;
+
+                const detection = await faceapi.detectSingleFace(video).withFaceLandmarks();
+                
+                if (detection) {
+                    const box = detection.detection.box;
+                    const isCentered = box.x > (video.videoWidth * 0.15) && (box.x + box.width) < (video.videoWidth * 0.85);
+                    
+                    if (isCentered) {
+                        guide.classList.add('active-guide');
+                        document.getElementById('instruction').innerHTML = " Position Correct. Hold still for biometric scan...";
+                        triggerAutoCapture();
+                    } else {
+                        guide.classList.remove('active-guide');
+                        document.getElementById('instruction').innerHTML = "  Please align your face within the frame.";
+                    }
+                }
+            }, 400);
+        }
+
+        async function triggerAutoCapture() {
+            isCapturing = true;
+            updateStep(2);
+            const countdownEl = document.getElementById('countdown');
+            let count = 3;
+            countdownEl.style.display = 'flex';
+            
+            const timer = setInterval(async () => {
+                countdownEl.innerText = count;
+                count--;
+                if (count < 0) {
+                    clearInterval(timer);
+                    countdownEl.style.display = 'none';
+                    await processAndVerify();
+                }
+            }, 800);
+        }
+
+        async function processAndVerify() {
+            updateStep(3);
+            const video = document.getElementById('video');
+            const resDiv = document.getElementById('result');
+            const resText = document.getElementById('resultText');
+            
+            resText.innerText = "ANALYZING BIOMETRIC DATA...";
+            resDiv.className = "mt-8 p-8 rounded-xl bg-blue-50 border border-blue-200 shadow-sm text-center border-t-4 border-t-blue-500 animate-pulse";
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0);
+            
+            const detection2 = await faceapi.detectSingleFace(canvas).withFaceLandmarks().withFaceDescriptor();
+            
+            if (detection2) {
+                const distance = faceapi.euclideanDistance(descriptor1, detection2.descriptor);
+                const threshold = 0.55; 
+
+                if (distance < threshold) {
+                    resText.innerText = "VERIFICATION SUCCESSFUL: MATCH CONFIRMED";
+                    resDiv.className = "mt-8 p-8 rounded-xl bg-green-50 border border-green-200 shadow-sm text-center border-t-4 border-t-green-600";
+                    resText.classList.add('text-green-700');
+                } else {
+                    resText.innerText = "VERIFICATION FAILED: BIOMETRIC MISMATCH";
+                    resDiv.className = "mt-8 p-8 rounded-xl bg-red-50 border border-red-200 shadow-sm text-center border-t-4 border-t-red-600";
+                    resText.classList.add('text-red-700');
+                }
+            } else {
+                resText.innerText = "ERROR: FACE LOST DURING SCAN";
+                resDiv.className = "mt-8 p-8 rounded-xl bg-yellow-50 border border-yellow-200 shadow-sm text-center border-t-4 border-t-yellow-600";
+                isCapturing = false;
+            }
+
+            setTimeout(() => {
+                isCapturing = false;
+                updateStep(1);
+            }, 6000);
+        }
+
+        document.getElementById('img1Input').addEventListener('change', async (e) => {
+            const img = document.getElementById('img1');
+            const placeholder = document.getElementById('img1Placeholder');
+            const instruction = document.getElementById('instruction');
+            
+            instruction.innerText = "Analyzing Reference Image... Please wait.";
+            img.src = URL.createObjectURL(e.target.files[0]);
+            img.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+
+            img.onload = async () => {
+                const res = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+                if(res) {
+                    descriptor1 = res.descriptor;
+                    instruction.innerHTML = "<strong>Step 2:</strong> Reference image accepted. Please look into the camera and align your face.";
+                    updateStep(2);
+                } else {
+                    alert("Error: No face detected in the uploaded photo. Please use a clear portrait.");
+                    img.classList.add('hidden');
+                    placeholder.classList.remove('hidden');
+                }
+            };
+        });
+
+        window.onload = startSystem;
+		})();
+  </script>
+	</body>
+
+
+	</html>
+</body>
+<html>
